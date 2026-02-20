@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dad's Solitaire</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a6b3c;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    user-select: none;
+  }
+  #header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: rgba(0,0,0,0.2);
+  }
+  #header h1 {
+    color: #e0d9b0;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  #header button {
+    background: #c8a94e;
+    color: #1a3a1a;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  #header button:hover { background: #dbbf62; }
+
+  #top-area {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 20px 10px;
+    flex-wrap: wrap;
+  }
+  #stock-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-right: 30px;
+  }
+  #stock-pile {
+    width: 90px;
+    height: 130px;
+    border-radius: 10px;
+    border: 2px dashed rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.4);
+    font-size: 14px;
+    position: relative;
+  }
+  #stock-pile.has-cards {
+    background: linear-gradient(135deg, #2255aa, #1a3d7a);
+    border: 2px solid #1a3060;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+    color: rgba(255,255,255,0.7);
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  #stock-pile.has-cards:hover {
+    background: linear-gradient(135deg, #2a66bb, #1e4a90);
+  }
+  #deal-btn {
+    background: #c8a94e;
+    color: #1a3a1a;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  #deal-btn:hover { background: #dbbf62; }
+  #deal-btn:disabled {
+    background: #777;
+    color: #aaa;
+    cursor: default;
+  }
+
+  .foundation-group {
+    display: flex;
+    gap: 10px;
+  }
+  .foundation-pile {
+    width: 90px;
+    height: 130px;
+    border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.25);
+    background: rgba(0,0,0,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .foundation-pile:hover {
+    border-color: rgba(255,255,255,0.5);
+  }
+  .foundation-pile .suit-watermark {
+    font-size: 36px;
+    opacity: 0.25;
+  }
+  .foundation-pile .card {
+    position: absolute;
+    top: 0; left: 0;
+  }
+  #start-rank-label {
+    color: #e0d9b0;
+    font-size: 13px;
+    text-align: center;
+    margin-left: 10px;
+    align-self: center;
+    opacity: 0.8;
+  }
+
+  #tableau {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 14px 10px 30px;
+  }
+  .column {
+    width: 90px;
+    min-height: 140px;
+    position: relative;
+    cursor: pointer;
+  }
+  .column.empty-col {
+    border-radius: 8px;
+    border: 2px dashed rgba(255,255,255,0.15);
+    min-height: 130px;
+  }
+  .column.drop-target {
+    border-color: rgba(255,255,100,0.6);
+  }
+
+  .card {
+    width: 90px;
+    height: 130px;
+    border-radius: 10px;
+    background: #fffff8;
+    border: 2px solid #ccc;
+    box-shadow: 1px 2px 5px rgba(0,0,0,0.3);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 5px 7px;
+    cursor: pointer;
+    transition: box-shadow 0.12s, transform 0.12s;
+  }
+  .card.red { color: #cc1111; }
+  .card.black { color: #111; }
+  .card.selected {
+    box-shadow: 0 0 0 3px #f1c40f, 0 4px 12px rgba(0,0,0,0.4);
+    transform: translateY(-4px);
+    z-index: 100 !important;
+  }
+  .card.move-hint {
+    box-shadow: 0 0 0 2px rgba(46,204,113,0.7);
+  }
+  .card .top-left {
+    display: flex;
+    align-items: baseline;
+    gap: 1px;
+    line-height: 1;
+  }
+  .card .top-left .rank {
+    font-size: 22px;
+    font-weight: 400;
+  }
+  .card .top-left .suit {
+    font-size: 18px;
+  }
+  .card .center-suit {
+    font-size: 38px;
+    text-align: center;
+    line-height: 1;
+    margin-top: -8px;
+  }
+  .card .bottom-right {
+    display: flex;
+    align-items: baseline;
+    gap: 1px;
+    line-height: 1;
+    transform: rotate(180deg);
+  }
+  .card .bottom-right .rank {
+    font-size: 22px;
+    font-weight: 400;
+  }
+  .card .bottom-right .suit {
+    font-size: 18px;
+  }
+
+  .column .card {
+    position: absolute;
+    left: 0;
+  }
+
+  #message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.85);
+    color: #f1c40f;
+    padding: 30px 50px;
+    border-radius: 16px;
+    font-size: 28px;
+    font-weight: bold;
+    text-align: center;
+    display: none;
+    z-index: 1000;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  }
+  #message .sub {
+    font-size: 14px;
+    color: #ccc;
+    margin-top: 10px;
+    font-weight: normal;
+  }
+
+  #rules-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    z-index: 999;
+    justify-content: center;
+    align-items: center;
+  }
+  #rules-overlay.visible { display: flex; }
+  #rules-box {
+    background: #f5f0e0;
+    color: #222;
+    max-width: 560px;
+    max-height: 85vh;
+    overflow-y: auto;
+    border-radius: 14px;
+    padding: 30px 34px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 20px;
+  }
+  #rules-box h2 {
+    margin: 0 0 14px;
+    font-size: 22px;
+    color: #1a5c2e;
+  }
+  #rules-box h3 {
+    margin: 18px 0 6px;
+    font-size: 16px;
+    color: #1a5c2e;
+  }
+  #rules-box p { margin: 6px 0; }
+  #rules-box ul {
+    margin: 6px 0 6px 20px;
+  }
+  #rules-box li { margin: 4px 0; }
+  #rules-box .close-btn {
+    display: block;
+    margin: 20px auto 0;
+    background: #1a6b3c;
+    color: #fff;
+    border: none;
+    padding: 8px 28px;
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  #rules-box .close-btn:hover { background: #228b4a; }
+
+  #info-bar {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    padding: 4px 20px;
+    color: #c0d9b0;
+    font-size: 13px;
+    opacity: 0.8;
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>Dad's Solitaire</h1>
+  <div>
+    <button onclick="showRules()">Rules</button>
+    <button onclick="autoToFoundation()">Auto</button>
+    <button onclick="undoMove()">Undo</button>
+    <button onclick="newGame()">New Game</button>
+  </div>
+</div>
+
+<div id="info-bar">
+  <span id="moves-count">Moves: 0</span>
+  <span id="foundation-count">Foundation: 0 / 52</span>
+</div>
+
+<div id="top-area">
+  <div id="stock-section">
+    <div id="stock-pile" onclick="dealFromStock()">Stock</div>
+    <button id="deal-btn" onclick="dealFromStock()">Deal to Columns</button>
+  </div>
+  <div class="foundation-group">
+    <div class="foundation-pile" data-suit="hearts" onclick="foundationClick('hearts')">
+      <span class="suit-watermark">&hearts;</span>
+    </div>
+    <div class="foundation-pile" data-suit="diamonds" onclick="foundationClick('diamonds')">
+      <span class="suit-watermark">&diams;</span>
+    </div>
+    <div class="foundation-pile" data-suit="clubs" onclick="foundationClick('clubs')">
+      <span class="suit-watermark">&clubs;</span>
+    </div>
+    <div class="foundation-pile" data-suit="spades" onclick="foundationClick('spades')">
+      <span class="suit-watermark">&spades;</span>
+    </div>
+  </div>
+  <div id="start-rank-label"></div>
+</div>
+
+<div id="tableau"></div>
+
+<div id="message">
+  <div id="msg-text"></div>
+  <div class="sub">Click "New Game" to play again</div>
+</div>
+
+<div id="rules-overlay" onclick="hideRules(event)">
+  <div id="rules-box">
+    <h2>Dad's Solitaire</h2>
+
+    <h3>Setup</h3>
+    <p>Cards are dealt face up into seven columns in the traditional solitaire layout: the first column has one card, the second has two, and so on up to seven. All cards are visible from the start.</p>
+    <p>The next card from the deck is turned face up and placed above the tableau. This card determines the <strong>foundation starting rank</strong> and is placed directly onto its suit's foundation pile. The remaining cards form the <strong>stock</strong>.</p>
+
+    <h3>Foundations</h3>
+    <p>There are four foundation piles, one for each suit. Each foundation builds <strong>upward by suit</strong> from the starting rank, wrapping from King back to Ace as needed. For example, if the starting rank is 9, each foundation builds: 9, 10, J, Q, K, A, 2, 3, 4, 5, 6, 7, 8.</p>
+    <p>The goal is to move all 52 cards onto the foundations.</p>
+
+    <h3>Moving Cards</h3>
+    <ul>
+      <li>A single card may be placed on another card of the <strong>same colour</strong> (red on red, black on black) that is <strong>one rank higher</strong>. For example, the 5 of Hearts can go on the 6 of Diamonds.</li>
+      <li>A <strong>stack</strong> of cards may be moved together, but only if every card in the stack is of the <strong>same suit</strong> and in consecutive ascending order. For example, 5&hearts; on 6&hearts; can be moved together onto 7&hearts; or 7&diams;, but 5&diams; on 6&hearts; cannot be moved as a pair.</li>
+      <li>Any card or stack may be moved into an <strong>empty column</strong>.</li>
+      <li>Only the exposed card at the end of a column may be moved to a foundation.</li>
+    </ul>
+
+    <h3>Dealing from the Stock</h3>
+    <p>When you have no more moves to make on the tableau, click the stock pile (or the "Deal to Columns" button) to deal one card from the stock onto the end of each of the seven columns, from left to right. If fewer than seven cards remain in the stock, deal as many as you have.</p>
+
+    <h3>Controls</h3>
+    <ul>
+      <li><strong>Click</strong> a card to select it (and any same-suit run below it).</li>
+      <li><strong>Click</strong> a destination card or empty column to move the selection.</li>
+      <li><strong>Double-click</strong> the end card of a column to send it to its foundation.</li>
+      <li><strong>Click the stock pile</strong> to deal cards to the columns.</li>
+      <li><strong>Auto</strong> moves all possible cards to the foundations at once.</li>
+      <li><strong>Undo</strong> (or Ctrl+Z) takes back the last move.</li>
+      <li><strong>Esc</strong> deselects the current selection.</li>
+    </ul>
+
+    <button class="close-btn" onclick="hideRules(event)">Got it</button>
+  </div>
+</div>
+
+<script>
+const SUITS = ['hearts', 'diamonds', 'clubs', 'spades'];
+const SUIT_SYMBOLS = { hearts: '\u2665', diamonds: '\u2666', clubs: '\u2663', spades: '\u2660' };
+const SUIT_COLORS = { hearts: 'red', diamonds: 'red', clubs: 'black', spades: 'black' };
+const RANK_NAMES = { 1: 'A', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10', 11: 'J', 12: 'Q', 13: 'K' };
+
+let tableau = [];       // 7 arrays of card objects
+let foundations = {};    // { hearts: [], diamonds: [], clubs: [], spades: [] }
+let stock = [];
+let startRank = 0;
+let moveCount = 0;
+let selection = null;   // { colIndex, cardIndex } or null
+let history = [];       // undo stack
+let gameWon = false;
+let lastClick = { col: -1, card: -1, time: 0 };
+
+function createDeck() {
+  const deck = [];
+  for (const suit of SUITS) {
+    for (let rank = 1; rank <= 13; rank++) {
+      deck.push({ suit, rank, color: SUIT_COLORS[suit] });
+    }
+  }
+  return deck;
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function newGame() {
+  gameWon = false;
+  document.getElementById('message').style.display = 'none';
+  const deck = shuffle(createDeck());
+
+  tableau = [];
+  let idx = 0;
+  for (let col = 0; col < 7; col++) {
+    tableau[col] = [];
+    for (let row = 0; row <= col; row++) {
+      tableau[col].push(deck[idx++]);
+    }
+  }
+
+  // 29th card defines foundation start rank
+  const foundationCard = deck[idx++];
+  startRank = foundationCard.rank;
+
+  foundations = { hearts: [], diamonds: [], clubs: [], spades: [] };
+  foundations[foundationCard.suit].push(foundationCard);
+
+  stock = deck.slice(idx);
+  moveCount = 0;
+  selection = null;
+  history = [];
+  render();
+}
+
+function saveState() {
+  history.push({
+    tableau: tableau.map(col => col.map(c => ({...c}))),
+    foundations: Object.fromEntries(SUITS.map(s => [s, foundations[s].map(c => ({...c}))])),
+    stock: stock.map(c => ({...c})),
+    moveCount
+  });
+  if (history.length > 50) history.shift();
+}
+
+function undoMove() {
+  if (history.length === 0) return;
+  const state = history.pop();
+  tableau = state.tableau;
+  foundations = state.foundations;
+  stock = state.stock;
+  moveCount = state.moveCount;
+  selection = null;
+  gameWon = false;
+  document.getElementById('message').style.display = 'none';
+  render();
+}
+
+function nextRank(rank) {
+  return (rank % 13) + 1;
+}
+
+function canPlaceOnFoundation(card, suit) {
+  if (card.suit !== suit) return false;
+  const pile = foundations[suit];
+  if (pile.length === 0) return card.rank === startRank;
+  return card.rank === nextRank(pile[pile.length - 1].rank);
+}
+
+function canPlaceOnTableau(card, targetCard) {
+  // Target card must be same colour and one rank higher
+  if (card.color !== targetCard.color) return false;
+  return targetCard.rank === nextRank(card.rank);
+}
+
+function isValidRun(col, fromIndex) {
+  // Check that cards from fromIndex to end form a same-suit descending run
+  for (let i = fromIndex; i < col.length - 1; i++) {
+    if (col[i].suit !== col[i + 1].suit) return false;
+    if (col[i].rank !== nextRank(col[i + 1].rank)) return false;
+  }
+  return true;
+}
+
+function tableauClick(colIndex, cardIndex) {
+  if (gameWon) return;
+  const col = tableau[colIndex];
+  const now = Date.now();
+
+  // Double-click detection: same card clicked twice within 400ms
+  if (lastClick.col === colIndex && lastClick.card === cardIndex && now - lastClick.time < 400) {
+    lastClick = { col: -1, card: -1, time: 0 };
+    // Try to send the bottom card to its foundation
+    if (cardIndex === col.length - 1) {
+      const card = col[col.length - 1];
+      if (canPlaceOnFoundation(card, card.suit)) {
+        saveState();
+        foundations[card.suit].push(col.pop());
+        moveCount++;
+        selection = null;
+        render();
+        checkWin();
+        return;
+      }
+    }
+  }
+  lastClick = { col: colIndex, card: cardIndex, time: now };
+
+  if (selection === null) {
+    // Try to select a run from cardIndex to end of column
+    if (cardIndex < col.length && isValidRun(col, cardIndex)) {
+      selection = { colIndex, cardIndex };
+      render();
+    }
+  } else if (selection.colIndex === colIndex && selection.cardIndex === cardIndex) {
+    // Clicking same card: deselect
+    selection = null;
+    render();
+  } else {
+    // Try to move
+    const srcCol = tableau[selection.colIndex];
+    const movingCards = srcCol.slice(selection.cardIndex);
+    const bottomMoving = movingCards[0];
+
+    if (col.length === 0) {
+      // Move to empty column
+      saveState();
+      tableau[selection.colIndex] = srcCol.slice(0, selection.cardIndex);
+      tableau[colIndex] = col.concat(movingCards);
+      moveCount++;
+      selection = null;
+      render();
+      checkWin();
+    } else {
+      const targetCard = col[col.length - 1];
+      if (canPlaceOnTableau(bottomMoving, targetCard)) {
+        saveState();
+        tableau[selection.colIndex] = srcCol.slice(0, selection.cardIndex);
+        tableau[colIndex] = col.concat(movingCards);
+        moveCount++;
+        selection = null;
+        render();
+        checkWin();
+      } else {
+        // Invalid move - deselect
+        selection = null;
+        render();
+      }
+    }
+  }
+}
+
+function emptyColumnClick(colIndex) {
+  if (gameWon) return;
+  if (selection === null) return;
+
+  const srcCol = tableau[selection.colIndex];
+  const movingCards = srcCol.slice(selection.cardIndex);
+
+  saveState();
+  tableau[selection.colIndex] = srcCol.slice(0, selection.cardIndex);
+  tableau[colIndex] = movingCards;
+  moveCount++;
+  selection = null;
+  render();
+  checkWin();
+}
+
+function foundationClick(suit) {
+  if (gameWon) return;
+  if (selection === null) return;
+
+  const srcCol = tableau[selection.colIndex];
+  // Can only move single card to foundation (bottom of selected run)
+  // Actually, only the last card of the column can go to foundation
+  // The selected run's last card = the bottom of the column
+  const card = srcCol[srcCol.length - 1];
+
+  // Only allow if the selection includes the bottom card and it's a single card
+  // OR if the selection is at the bottom
+  if (selection.cardIndex !== srcCol.length - 1) {
+    // Can't move a stack to foundation, only the single bottom card
+    selection = null;
+    render();
+    return;
+  }
+
+  if (canPlaceOnFoundation(card, suit)) {
+    saveState();
+    foundations[suit].push(srcCol.pop());
+    moveCount++;
+    selection = null;
+    render();
+    checkWin();
+  } else {
+    selection = null;
+    render();
+  }
+}
+
+function dealFromStock() {
+  if (gameWon || stock.length === 0) return;
+  saveState();
+  for (let col = 0; col < 7 && stock.length > 0; col++) {
+    tableau[col].push(stock.shift());
+  }
+  moveCount++;
+  selection = null;
+  render();
+}
+
+function autoToFoundation() {
+  if (gameWon) return;
+  let moved = true;
+  let anyMoved = false;
+  while (moved) {
+    moved = false;
+    for (let col = 0; col < 7; col++) {
+      if (tableau[col].length === 0) continue;
+      const card = tableau[col][tableau[col].length - 1];
+      if (canPlaceOnFoundation(card, card.suit)) {
+        if (!anyMoved) saveState();
+        foundations[card.suit].push(tableau[col].pop());
+        moveCount++;
+        moved = true;
+        anyMoved = true;
+      }
+    }
+  }
+  if (anyMoved) {
+    selection = null;
+    render();
+    checkWin();
+  }
+}
+
+function checkWin() {
+  let total = 0;
+  for (const suit of SUITS) total += foundations[suit].length;
+  if (total === 52) {
+    gameWon = true;
+    document.getElementById('message').style.display = 'block';
+    document.getElementById('msg-text').textContent = 'You Win!';
+  }
+}
+
+function totalFoundation() {
+  let total = 0;
+  for (const suit of SUITS) total += foundations[suit].length;
+  return total;
+}
+
+function cardHTML(card) {
+  const symbol = SUIT_SYMBOLS[card.suit];
+  const name = RANK_NAMES[card.rank];
+  return `
+    <div class="top-left"><span class="rank">${name}</span><span class="suit">${symbol}</span></div>
+    <div class="center-suit">${symbol}</div>
+    <div class="bottom-right"><span class="rank">${name}</span><span class="suit">${symbol}</span></div>
+  `;
+}
+
+function render() {
+  // Info bar
+  document.getElementById('moves-count').textContent = `Moves: ${moveCount}`;
+  document.getElementById('foundation-count').textContent = `Foundation: ${totalFoundation()} / 52`;
+
+  // Start rank label
+  document.getElementById('start-rank-label').textContent = `Foundation starts at: ${RANK_NAMES[startRank]}`;
+
+  // Stock
+  const stockEl = document.getElementById('stock-pile');
+  if (stock.length > 0) {
+    stockEl.className = 'has-cards';
+    stockEl.id = 'stock-pile';
+    stockEl.textContent = stock.length;
+  } else {
+    stockEl.className = '';
+    stockEl.id = 'stock-pile';
+    stockEl.textContent = 'Empty';
+  }
+  document.getElementById('deal-btn').disabled = stock.length === 0;
+
+  // Foundations
+  for (const suit of SUITS) {
+    const pileEl = document.querySelector(`.foundation-pile[data-suit="${suit}"]`);
+    // Remove existing card if any
+    const oldCard = pileEl.querySelector('.card');
+    if (oldCard) oldCard.remove();
+
+    if (foundations[suit].length > 0) {
+      const topCard = foundations[suit][foundations[suit].length - 1];
+      const cardEl = document.createElement('div');
+      cardEl.className = `card ${topCard.color}`;
+      cardEl.innerHTML = cardHTML(topCard);
+      pileEl.appendChild(cardEl);
+    }
+  }
+
+  // Tableau
+  const tableauEl = document.getElementById('tableau');
+  tableauEl.innerHTML = '';
+
+  for (let col = 0; col < 7; col++) {
+    const colEl = document.createElement('div');
+    colEl.className = 'column';
+
+    if (tableau[col].length === 0) {
+      colEl.classList.add('empty-col');
+      colEl.onclick = () => emptyColumnClick(col);
+      // Set height for empty columns
+      colEl.style.height = '130px';
+    } else {
+      const OVERLAP = 32;
+      const colHeight = 130 + (tableau[col].length - 1) * OVERLAP;
+      colEl.style.height = colHeight + 'px';
+
+      for (let i = 0; i < tableau[col].length; i++) {
+        const card = tableau[col][i];
+        const cardEl = document.createElement('div');
+        cardEl.className = `card ${card.color}`;
+        cardEl.style.top = (i * OVERLAP) + 'px';
+        cardEl.style.zIndex = i;
+        cardEl.innerHTML = cardHTML(card);
+
+        // Highlight selection
+        if (selection && selection.colIndex === col && i >= selection.cardIndex) {
+          cardEl.classList.add('selected');
+        }
+
+        const ci = col;
+        const ri = i;
+        cardEl.onclick = (e) => {
+          e.stopPropagation();
+          tableauClick(ci, ri);
+        };
+
+        colEl.appendChild(cardEl);
+      }
+    }
+
+    tableauEl.appendChild(colEl);
+  }
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    selection = null;
+    render();
+  }
+  if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    undoMove();
+  }
+});
+
+
+function showRules() {
+  document.getElementById('rules-overlay').classList.add('visible');
+}
+
+function hideRules(e) {
+  if (e.target.id === 'rules-overlay' || e.target.classList.contains('close-btn')) {
+    document.getElementById('rules-overlay').classList.remove('visible');
+  }
+}
+
+newGame();
+</script>
+</body>
+</html>
