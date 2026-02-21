@@ -158,19 +158,16 @@
     width: 90px;
     height: 130px;
     border-radius: 10px;
-    background: #fffff8;
-    border: 2px solid #ccc;
+    background: linear-gradient(160deg, #f0f0ee, #d8d8d4);
+    border: 2px solid #999;
     box-shadow: 1px 2px 5px rgba(0,0,0,0.3);
     position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 5px 7px;
     cursor: pointer;
     transition: box-shadow 0.12s, transform 0.12s;
+    font-family: 'Georgia', 'Times New Roman', serif;
   }
   .card.red { color: #cc1111; }
-  .card.black { color: #111; }
+  .card.black { color: #222; }
   .card.selected {
     box-shadow: 0 0 0 3px #f1c40f, 0 4px 12px rgba(0,0,0,0.4);
     transform: translateY(-4px);
@@ -179,38 +176,27 @@
   .card.move-hint {
     box-shadow: 0 0 0 2px rgba(46,204,113,0.7);
   }
-  .card .top-left {
-    display: flex;
-    align-items: baseline;
-    gap: 1px;
+  .card .card-rank {
+    position: absolute;
+    top: 6px;
+    left: 8px;
+    font-size: 28px;
     line-height: 1;
   }
-  .card .top-left .rank {
-    font-size: 22px;
-    font-weight: 400;
-  }
-  .card .top-left .suit {
+  .card .card-suit-corner {
+    position: absolute;
+    top: 8px;
+    right: 8px;
     font-size: 18px;
-  }
-  .card .center-suit {
-    font-size: 38px;
-    text-align: center;
     line-height: 1;
-    margin-top: -8px;
   }
-  .card .bottom-right {
-    display: flex;
-    align-items: baseline;
-    gap: 1px;
+  .card .card-suit-center {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 72px;
     line-height: 1;
-    transform: rotate(180deg);
-  }
-  .card .bottom-right .rank {
-    font-size: 22px;
-    font-weight: 400;
-  }
-  .card .bottom-right .suit {
-    font-size: 18px;
   }
 
   .column .card {
@@ -670,9 +656,9 @@ function cardHTML(card) {
   const symbol = SUIT_SYMBOLS[card.suit];
   const name = RANK_NAMES[card.rank];
   return `
-    <div class="top-left"><span class="rank">${name}</span><span class="suit">${symbol}</span></div>
-    <div class="center-suit">${symbol}</div>
-    <div class="bottom-right"><span class="rank">${name}</span><span class="suit">${symbol}</span></div>
+    <span class="card-rank">${name}</span>
+    <span class="card-suit-corner">${symbol}</span>
+    <span class="card-suit-center">${symbol}</span>
   `;
 }
 
