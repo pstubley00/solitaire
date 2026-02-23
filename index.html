@@ -120,6 +120,14 @@
     font-size: 36px;
     opacity: 0.25;
   }
+  .foundation-pile .rank-watermark {
+    position: absolute;
+    top: 4px;
+    left: 8px;
+    font-size: 28px;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    opacity: 0.3;
+  }
   .foundation-pile .card {
     position: absolute;
     top: 0; left: 0;
@@ -686,9 +694,11 @@ function render() {
   // Foundations
   for (const suit of SUITS) {
     const pileEl = document.querySelector(`.foundation-pile[data-suit="${suit}"]`);
-    // Remove existing card if any
+    // Remove existing card and rank watermark if any
     const oldCard = pileEl.querySelector('.card');
     if (oldCard) oldCard.remove();
+    const oldRank = pileEl.querySelector('.rank-watermark');
+    if (oldRank) oldRank.remove();
 
     if (foundations[suit].length > 0) {
       const topCard = foundations[suit][foundations[suit].length - 1];
@@ -696,6 +706,11 @@ function render() {
       cardEl.className = `card ${topCard.color}`;
       cardEl.innerHTML = cardHTML(topCard);
       pileEl.appendChild(cardEl);
+    } else {
+      const rankEl = document.createElement('span');
+      rankEl.className = 'rank-watermark';
+      rankEl.textContent = RANK_NAMES[startRank];
+      pileEl.appendChild(rankEl);
     }
   }
 
